@@ -23,28 +23,28 @@ class CliChat(Chat):
     async def list_docs_ids(self) -> list[str]:
         return await self.doc_client.read_resource("docs://documents")
 
-    async def get_doc_content(self, doc_id: str) -> str:
-        return await self.doc_client.read_resource(f"docs://documents/{doc_id}")
+    async def get_doc_content(self, doc_name: str) -> str:
+        return await self.doc_client.read_resource(f"docs://documents/{doc_name}")
 
     async def get_prompt(
-        self, command: str, doc_id: str
+        self, command: str, doc_name: str
     ) -> list[PromptMessage]:
-        return await self.doc_client.get_prompt(command, {"doc_id": doc_id})
+        return await self.doc_client.get_prompt(command, {"doc_name": doc_name})
 
     async def _extract_resources(self, query: str) -> str:
         mentions = [word[1:] for word in query.split() if word.startswith("@")]
 
-        doc_ids = await self.list_docs_ids()
+        doc_names = await self.list_docs_ids()
         mentioned_docs: list[Tuple[str, str]] = []
 
-        for doc_id in doc_ids:
-            if doc_id in mentions:
-                content = await self.get_doc_content(doc_id)
-                mentioned_docs.append((doc_id, content))
+        for doc_name in doc_names:
+            if doc_name in mentions:
+                content = await self.get_doc_content(doc_name)
+                mentioned_docs.append((doc_name, content))
 
         return "".join(
-            f'\n<document id="{doc_id}">\n{content}\n</document>\n'
-            for doc_id, content in mentioned_docs
+            f'\n<document name="{doc_name}">\n{content}\n</document>\n'
+            for doc_name, content in mentioned_docs
         )
 
     async def _process_command(self, query: str) -> bool:
@@ -55,7 +55,7 @@ class CliChat(Chat):
         command = words[0].replace("/", "")
 
         messages = await self.doc_client.get_prompt(
-            command, {"doc_id": words[1]}
+            command, {"doc_name": words[1]}
         )
 
         self.messages += convert_prompt_messages_to_message_params(messages)
