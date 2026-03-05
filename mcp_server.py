@@ -1,5 +1,6 @@
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
+from typing import List
 
 mcp = FastMCP("DocumentMCP", log_level="ERROR")
 
@@ -39,8 +40,25 @@ def edit_document(
     docs[doc_name] = docs[doc_name].replace(old_str, new_str)
 
 
-# TODO: Write a resource to return all doc id's
-# TODO: Write a resource to return the contents of a particular doc
+@mcp.resource(
+    "docs://documents",
+    mime_type="application/json"
+)
+def list_documents() -> List[str]:
+    return list(docs.keys())
+
+
+@mcp.resource(
+    "docs://documents/{doc_name}",
+    mime_type="text/plain"   
+)
+def fetch_content_from_document(doc_name: str) -> str:
+    if doc_name not in docs:
+        raise ValueError(f"Document {doc_name} wasn't found")
+
+    return docs[doc_name]
+
+
 # TODO: Write a prompt to rewrite a doc in markdown format
 # TODO: Write a prompt to summarize a doc
 
